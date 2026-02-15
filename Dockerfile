@@ -7,14 +7,15 @@ RUN corepack enable pnpm && apt-get update && apt-get install -y git openssh-cli
 
 FROM base AS builder
 WORKDIR /app
+RUN git init
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN --mount=type=cache,id=pnpm-store,target=/root/.pnpm-store \
     pnpm install --frozen-lockfile
 
 COPY . .
-RUN chmod +x scripts/docker-entrypoint.sh
+RUN find . -name "*.sh" -exec sed -i 's/\r$//' {} + && chmod +x scripts/docker-entrypoint.sh
 RUN --mount=type=cache,id=pnpm-store,target=/root/.pnpm-store \
-    pnpm build && pnpm prune --prod
+    pnpm build && pnpm prune --prod --ignore-scripts
 
 FROM base AS runner
 WORKDIR /app

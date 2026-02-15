@@ -39,6 +39,14 @@ program
 
 /* Other Commands Here */
 
+process.on("unhandledRejection", (reason) => {
+  console.error("Unhandled promise rejection:", reason);
+});
+
+process.on("uncaughtException", (error) => {
+  console.error("Uncaught exception:", error);
+});
+
 const main = async () => {
   program.parse(process.argv);
 };

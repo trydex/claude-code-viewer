@@ -11,6 +11,23 @@ import { parseJsonl } from "../../claude-code/functions/parseJsonl";
 import type { ProjectMeta } from "../../types";
 import { decodeProjectId } from "../functions/id";
 
+const normalizeWindowsPath = (p: string): string => {
+  const match = p.match(/^([A-Za-z]):\\/);
+  if (!match) {
+    return p;
+  }
+  const driveLetter = match[1]!.toUpperCase();
+  const rest = p.slice(3).replace(/\\/g, "/");
+  const mappings: Record<string, string> = JSON.parse(process.env.CCV_PATH_MAPPINGS ?? "{}");
+  const normalized = `${driveLetter}:/${rest}`;
+  for (const [winPrefix, linuxPrefix] of Object.entries(mappings)) {
+    if (normalized.startsWith(winPrefix)) {
+      return normalized.replace(winPrefix, linuxPrefix);
+    }
+  }
+  return `/${driveLetter}:/${rest}`;
+};
+
 const ProjectPathSchema = z.string().nullable();
 
 const LayerImpl = Effect.gen(function* () {
@@ -48,7 +65,7 @@ const LayerImpl = Effect.gen(function* () {
           continue;
         }
 
-        cwd = conversation.cwd;
+        cwd = normalizeWindowsPath(conversation.cwd);
         break;
       }
 

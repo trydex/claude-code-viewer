@@ -1,7 +1,7 @@
 import { Trans } from "@lingui/react";
 import { Link } from "@tanstack/react-router";
-import { FolderIcon } from "lucide-react";
-import type { FC } from "react";
+import { FolderIcon, Loader2 } from "lucide-react";
+import { type FC, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -19,6 +19,7 @@ export const ProjectList: FC = () => {
     data: { projects },
   } = useProjects();
   const { config } = useConfig();
+  const [loadingProjectId, setLoadingProjectId] = useState<string | null>(null);
 
   if (projects.length === 0) {
     <Card>
@@ -64,11 +65,19 @@ export const ProjectList: FC = () => {
             </p>
           </CardContent>
           <CardContent className="pt-0">
-            <Button asChild className="w-full">
+            <Button
+              asChild
+              className="w-full"
+              disabled={loadingProjectId === project.id}
+            >
               <Link
                 to={"/projects/$projectId/session"}
                 params={{ projectId: project.id }}
+                onClick={() => setLoadingProjectId(project.id)}
               >
+                {loadingProjectId === project.id && (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                )}
                 <Trans id="project_list.view_conversations" />
               </Link>
             </Button>

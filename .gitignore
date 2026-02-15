@@ -30,7 +30,12 @@ yarn-debug.log*
 yarn-error.log*
 
 # local env files
+.env
 .env*.local
+
+# local scripts
+ssh-tunnel.ps1
+ssh-tunnel-silent.vbs
 
 # vercel
 .vercel

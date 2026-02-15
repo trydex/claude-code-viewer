@@ -2,6 +2,8 @@ import { Trans, useLingui } from "@lingui/react";
 import {
   AlertCircleIcon,
   LoaderIcon,
+  MicIcon,
+  MicOffIcon,
   PaperclipIcon,
   SendIcon,
   XIcon,
@@ -124,6 +126,11 @@ export const ChatInput: FC<ChatInputProps> = ({
   );
   const [forkSession, setForkSession] = useState(true);
 
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const voiceStoppedRef = useRef(false);
+  const micStreamRef = useRef<MediaStream | null>(null);
+
   const containerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -132,6 +139,87 @@ export const ChatInput: FC<ChatInputProps> = ({
   const helpId = useId();
   const { config } = useConfig();
   const createSchedulerJob = useCreateSchedulerJob();
+
+  const hasSpeechRecognition =
+    typeof window !== "undefined" &&
+    ("SpeechRecognition" in window || "webkitSpeechRecognition" in window);
+
+  const stopMicStream = useCallback(() => {
+    if (micStreamRef.current) {
+      for (const track of micStreamRef.current.getTracks()) {
+        track.stop();
+      }
+      micStreamRef.current = null;
+    }
+  }, []);
+
+  const toggleVoiceInput = useCallback(async () => {
+    if (isListening && recognitionRef.current) {
+      voiceStoppedRef.current = true;
+      recognitionRef.current.stop();
+      stopMicStream();
+      return;
+    }
+
+    const SpeechRecognitionAPI =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognitionAPI) {
+      return;
+    }
+
+    try {
+      micStreamRef.current = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+      });
+    } catch {
+      micStreamRef.current = null;
+    }
+
+    voiceStoppedRef.current = false;
+
+    const recognition = new SpeechRecognitionAPI();
+    recognition.lang = "ru-RU";
+    recognition.continuous = true;
+    recognition.interimResults = false;
+
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        if (event.results[i].isFinal) {
+          const transcript = event.results[i][0].transcript;
+          setMessage((prev) => (prev ? `${prev} ${transcript}` : transcript));
+        }
+      }
+    };
+
+    recognition.onend = () => {
+      if (!voiceStoppedRef.current) {
+        try {
+          recognition.start();
+        } catch {
+          setIsListening(false);
+          recognitionRef.current = null;
+          stopMicStream();
+        }
+        return;
+      }
+      setIsListening(false);
+      recognitionRef.current = null;
+    };
+
+    recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+      if (event.error === "no-speech" || event.error === "aborted") {
+        return;
+      }
+      voiceStoppedRef.current = true;
+      setIsListening(false);
+      recognitionRef.current = null;
+      stopMicStream();
+    };
+
+    recognitionRef.current = recognition;
+    setIsListening(true);
+    recognition.start();
+  }, [isListening, stopMicStream]);
 
   // Auto-resize textarea based on content
   // biome-ignore lint/correctness/useExhaustiveDependencies: message is intentionally included to trigger resize
@@ -524,6 +612,25 @@ export const ChatInput: FC<ChatInputProps> = ({
                     <Trans id="chat.attach_file" />
                   </span>
                 </Button>
+                {hasSpeechRecognition && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={toggleVoiceInput}
+                    disabled={isPending || disabled}
+                    className={`gap-2 px-2 hover:bg-background/80 hover:text-foreground transition-all duration-200 h-8 rounded-lg ${isListening ? "text-red-500 bg-red-50 dark:bg-red-950/30" : "text-muted-foreground"}`}
+                  >
+                    {isListening ? (
+                      <MicOffIcon className="w-4 h-4 animate-pulse" />
+                    ) : (
+                      <MicIcon className="w-4 h-4" />
+                    )}
+                    <span className="text-xs font-medium hidden sm:inline">
+                      {isListening ? "Stop" : "Voice"}
+                    </span>
+                  </Button>
+                )}
                 {message.length > 0 && (
                   <span
                     className="text-[10px] font-medium bg-muted/50 px-2 py-0.5 rounded-full border border-border/30 transition-all duration-200"

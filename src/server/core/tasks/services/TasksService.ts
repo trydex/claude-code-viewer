@@ -84,11 +84,8 @@ export class TasksService extends Context.Tag("TasksService")<
             return Option.none<string>();
           }
 
-          // Check if the projectPath is already pointing to a metadata directory in .claude/projects
-          // Path structure: .../.claude/projects/<normalized-id>
-          const isMetadataPath =
-            projectPath.includes(join(CLAUDE_DIR_NAME, PROJECTS_DIR_NAME)) &&
-            projectPath.split(path.sep).pop()?.startsWith("-");
+          const claudeProjectsDir = path.join(claudeDir, PROJECTS_DIR_NAME);
+          const isMetadataPath = projectPath.startsWith(claudeProjectsDir);
 
           let projectMetaDir: string;
 
@@ -184,16 +181,9 @@ export class TasksService extends Context.Tag("TasksService")<
                 ),
               );
             }
-            const claudeDir = yield* getClaudeDir();
-            const identifier = normalizeProjectPath(projectPath);
-            const projectMetaDir = path.join(
-              claudeDir,
-              PROJECTS_DIR_NAME,
-              identifier,
-            );
             return yield* Effect.fail(
               new Error(
-                `Project metadata directory not found or no UUID: ${projectMetaDir}`,
+                `Project metadata directory not found or no UUID: ${projectPath}`,
               ),
             );
           }

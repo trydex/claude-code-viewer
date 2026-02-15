@@ -1,4 +1,5 @@
 import { FileSystem, Path } from "@effect/platform";
+import { lstatSync } from "node:fs";
 import { Context, Effect, Layer, Option } from "effect";
 import type { InferEffect } from "../../../lib/effect/types";
 import { ApplicationContext } from "../../platform/services/ApplicationContext";
@@ -72,6 +73,13 @@ const LayerImpl = Effect.gen(function* () {
           if (!stat || stat.type !== "Directory") {
             return null;
           }
+
+          try {
+            if (lstatSync(fullPath).isSymbolicLink()) {
+              return null;
+            }
+          } catch {}
+
 
           const id = encodeProjectId(fullPath);
           const meta = yield* projectMetaService.getProjectMeta(id);

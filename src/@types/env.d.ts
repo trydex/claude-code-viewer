@@ -8,3 +8,8 @@ declare module "process" {
     }
   }
 }
+
+interface Window {
+  SpeechRecognition: typeof SpeechRecognition;
+  webkitSpeechRecognition: typeof SpeechRecognition;
+}
