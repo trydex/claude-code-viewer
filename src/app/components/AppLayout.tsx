@@ -52,7 +52,7 @@ export const AppLayout: FC<AppLayoutProps> = ({
   return (
     <div className="flex flex-col h-screen w-screen overflow-hidden bg-background">
       {/* Top Status Bar */}
-      <header className="h-7 flex items-center justify-between px-2 bg-muted/30 border-b border-border/40 text-[11px] flex-shrink-0 select-none">
+      <header className="h-11 sm:h-7 flex items-center justify-between px-3 sm:px-2 bg-muted/30 border-b border-border/40 text-xs sm:text-[11px] flex-shrink-0 select-none">
         {/* Left: Project/Session Info */}
         <div className="flex items-center gap-2 min-w-0 flex-1 overflow-x-auto overflow-y-hidden">
           {projectName && (
@@ -88,7 +88,7 @@ export const AppLayout: FC<AppLayoutProps> = ({
         </div>
 
         {/* Right: Panel Toggle Buttons */}
-        <div className="flex items-center gap-0.5 shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-0.5 shrink-0">
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -102,14 +102,14 @@ export const AppLayout: FC<AppLayoutProps> = ({
                     setIsLeftPanelOpen(!isLeftPanelOpen);
                   }}
                   className={cn(
-                    "w-5 h-5 flex items-center justify-center rounded transition-colors",
+                    "w-9 h-9 sm:w-5 sm:h-5 flex items-center justify-center rounded transition-colors",
                     isLeftPanelOpen
                       ? "bg-primary/10 text-primary"
                       : "hover:bg-muted text-muted-foreground hover:text-foreground",
                   )}
                   aria-label="Toggle left panel"
                 >
-                  <PanelLeftIcon className="w-3 h-3" />
+                  <PanelLeftIcon className="w-5 h-5 sm:w-3 sm:h-3" />
                 </button>
               </TooltipTrigger>
               <TooltipContent side="bottom" className="text-xs">
@@ -123,14 +123,14 @@ export const AppLayout: FC<AppLayoutProps> = ({
                   type="button"
                   onClick={() => setIsBottomPanelOpen(!isBottomPanelOpen)}
                   className={cn(
-                    "w-5 h-5 flex items-center justify-center rounded transition-colors",
+                    "w-9 h-9 sm:w-5 sm:h-5 flex items-center justify-center rounded transition-colors",
                     isBottomPanelOpen
                       ? "bg-primary/10 text-primary"
                       : "hover:bg-muted text-muted-foreground hover:text-foreground",
                   )}
                   aria-label="Toggle bottom panel"
                 >
-                  <PanelBottomIcon className="w-3 h-3" />
+                  <PanelBottomIcon className="w-5 h-5 sm:w-3 sm:h-3" />
                 </button>
               </TooltipTrigger>
               <TooltipContent side="bottom" className="text-xs">
@@ -144,14 +144,14 @@ export const AppLayout: FC<AppLayoutProps> = ({
                   type="button"
                   onClick={toggleRightPanel}
                   className={cn(
-                    "w-5 h-5 flex items-center justify-center rounded transition-colors",
+                    "w-9 h-9 sm:w-5 sm:h-5 flex items-center justify-center rounded transition-colors",
                     isRightPanelOpen
                       ? "bg-primary/10 text-primary"
                       : "hover:bg-muted text-muted-foreground hover:text-foreground",
                   )}
                   aria-label="Toggle right panel"
                 >
-                  <PanelRightIcon className="w-3 h-3" />
+                  <PanelRightIcon className="w-5 h-5 sm:w-3 sm:h-3" />
                 </button>
               </TooltipTrigger>
               <TooltipContent side="bottom" className="text-xs">
