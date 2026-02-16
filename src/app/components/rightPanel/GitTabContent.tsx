@@ -54,7 +54,6 @@ import { DiffViewer } from "../../projects/[projectId]/sessions/[sessionId]/comp
 import {
   useGitBranches,
   useGitCheckout,
-  useGitCurrentRevisionsSuspense,
   useGitDiffSuspense,
 } from "../../projects/[projectId]/sessions/[sessionId]/hooks/useGit";
 import { useSession } from "../../projects/[projectId]/sessions/[sessionId]/hooks/useSession";
@@ -81,13 +80,12 @@ const BranchSelectorFallback: FC = () => (
 
 const BranchSelectorContent: FC<{ projectId: string }> = ({ projectId }) => {
   const [open, setOpen] = useState(false);
-  const { data: revisionsData } = useGitCurrentRevisionsSuspense(projectId);
   const { data: branchesData } = useGitBranches(projectId);
   const { mutate: checkout, isPending: isCheckoutPending } =
     useGitCheckout(projectId);
 
-  const currentBranch = revisionsData?.success
-    ? (revisionsData.data.currentBranch?.name ?? null)
+  const currentBranch = branchesData?.success
+    ? (branchesData.data.currentBranch ?? null)
     : null;
 
   const localBranches = useMemo(() => {
