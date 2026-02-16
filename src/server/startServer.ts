@@ -4,6 +4,7 @@ import { NodeContext } from "@effect/platform-node";
 import { createAdaptorServer } from "@hono/node-server";
 import { serveStatic } from "@hono/node-server/serve-static";
 import { Effect, Layer } from "effect";
+import { compress } from "hono/compress";
 import { AgentSessionLayer } from "./core/agent-session";
 import { AgentSessionController } from "./core/agent-session/presentation/AgentSessionController";
 import { ClaudeCodeController } from "./core/claude-code/presentation/ClaudeCodeController";
@@ -48,6 +49,13 @@ export const startServer = async (options: CliOptions) => {
   // biome-ignore lint/style/noProcessEnv: allow only here
   const isDevelopment = isDevelopmentEnv(process.env.CCV_ENV);
   const apiOnly = options.apiOnly === true;
+
+  honoApp.use("*", async (c, next) => {
+    if (c.req.path.startsWith("/api/sse")) {
+      return next();
+    }
+    return compress()(c, next);
+  });
 
   if (!isDevelopment && !apiOnly) {
     const staticPath = resolve(import.meta.dirname, "static");

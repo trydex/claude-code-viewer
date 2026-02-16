@@ -2,7 +2,7 @@ import { Trans } from "@lingui/react";
 import { useQuery } from "@tanstack/react-query";
 import { AlertCircle, Eye, FileCode, Loader2 } from "lucide-react";
 import { type FC, type ReactNode, useState } from "react";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { LazySyntaxHighlighter as SyntaxHighlighter } from "../../../../../../components/LazySyntaxHighlighter";
 import {
   oneDark,
   oneLight,

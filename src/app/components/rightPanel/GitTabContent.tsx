@@ -11,7 +11,7 @@ import {
   RefreshCwIcon,
 } from "lucide-react";
 import { type FC, Suspense, useCallback, useMemo, useState } from "react";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { LazySyntaxHighlighter as SyntaxHighlighter } from "../LazySyntaxHighlighter";
 import {
   oneDark,
   oneLight,

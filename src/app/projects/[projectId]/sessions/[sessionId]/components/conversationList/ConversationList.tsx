@@ -1,6 +1,6 @@
 import { Trans } from "@lingui/react";
 import { AlertTriangle, ChevronDown, ExternalLink } from "lucide-react";
-import { type FC, useCallback, useMemo } from "react";
+import { type FC, useCallback, useMemo, useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   Collapsible,
@@ -345,89 +345,108 @@ export const ConversationList: FC<ConversationListProps> = ({
     });
   }, [conversations, shouldRenderConversation]);
 
+  const INITIAL_RENDER_LIMIT = 200;
+  const [showAll, setShowAll] = useState(false);
+
+  const renderable = useMemo(() => {
+    const items: { conversation: Conversation | ErrorJsonl; showTimestamp: boolean }[] = [];
+    for (const entry of conversationsWithTimestamp) {
+      if (shouldRenderConversation(entry.conversation) || entry.conversation.type === "x-error") {
+        items.push(entry);
+      }
+    }
+    return items;
+  }, [conversationsWithTimestamp, shouldRenderConversation]);
+
+  const visibleItems = useMemo(() => {
+    if (showAll || renderable.length <= INITIAL_RENDER_LIMIT) {
+      return renderable;
+    }
+    return renderable.slice(-INITIAL_RENDER_LIMIT);
+  }, [renderable, showAll]);
+
+  const hiddenCount = renderable.length - visibleItems.length;
+
   return (
     <>
+      {hiddenCount > 0 && (
+        <div className="flex justify-center py-3">
+          <button
+            type="button"
+            className="text-sm text-muted-foreground hover:text-foreground px-4 py-2 rounded-md border border-border hover:bg-muted/50 transition-colors"
+            onClick={() => setShowAll(true)}
+          >
+            Show {hiddenCount} earlier messages
+          </button>
+        </div>
+      )}
       <ul>
-        {conversationsWithTimestamp.flatMap(
-          ({ conversation, showTimestamp }) => {
-            if (!shouldRenderConversation(conversation)) {
-              if (conversation.type === "x-error") {
-                return (
-                  <SchemaErrorDisplay
-                    key={`error_${conversation.line}`}
-                    errorLine={conversation.line}
-                  />
-                );
-              }
-              return [];
-            }
-
-            if (conversation.type === "x-error") {
-              return (
-                <SchemaErrorDisplay
-                  key={`error_${conversation.line}`}
-                  errorLine={conversation.line}
-                />
-              );
-            }
-
-            const elm = (
-              <ConversationItem
-                key={getConversationKey(conversation)}
-                conversation={conversation}
-                getToolResult={getToolResult}
-                getAgentIdForToolUse={getAgentIdForToolUse}
-                getTurnDuration={getTurnDuration}
-                isRootSidechain={isRootSidechain}
-                getSidechainConversations={getSidechainConversations}
-                getSidechainConversationByAgentId={
-                  getSidechainConversationByAgentId
-                }
-                getSidechainConversationByPrompt={
-                  getSidechainConversationByPrompt
-                }
-                existsRelatedTaskCall={existsRelatedTaskCall}
-                projectId={projectId}
-                sessionId={sessionId}
-                showTimestamp={showTimestamp}
+        {visibleItems.flatMap(({ conversation, showTimestamp }) => {
+          if (conversation.type === "x-error") {
+            return (
+              <SchemaErrorDisplay
+                key={`error_${conversation.line}`}
+                errorLine={conversation.line}
               />
             );
+          }
 
-            const isLocalCommandOutput =
-              conversation.type === "user" &&
-              typeof conversation.message.content === "string" &&
-              parseUserMessage(conversation.message.content).kind ===
-                "local-command";
+          const elm = (
+            <ConversationItem
+              key={getConversationKey(conversation)}
+              conversation={conversation}
+              getToolResult={getToolResult}
+              getAgentIdForToolUse={getAgentIdForToolUse}
+              getTurnDuration={getTurnDuration}
+              isRootSidechain={isRootSidechain}
+              getSidechainConversations={getSidechainConversations}
+              getSidechainConversationByAgentId={
+                getSidechainConversationByAgentId
+              }
+              getSidechainConversationByPrompt={
+                getSidechainConversationByPrompt
+              }
+              existsRelatedTaskCall={existsRelatedTaskCall}
+              projectId={projectId}
+              sessionId={sessionId}
+              showTimestamp={showTimestamp}
+            />
+          );
 
-            const isSidechain =
-              conversation.type !== "summary" &&
-              conversation.type !== "file-history-snapshot" &&
-              conversation.type !== "queue-operation" &&
-              conversation.type !== "progress" &&
-              conversation.type !== "custom-title" &&
-              conversation.type !== "agent-name" &&
-              conversation.isSidechain;
+          const isLocalCommandOutput =
+            conversation.type === "user" &&
+            typeof conversation.message.content === "string" &&
+            parseUserMessage(conversation.message.content).kind ===
+              "local-command";
 
-            return [
-              <li
-                className={`w-full flex ${
-                  isSidechain ||
-                  isLocalCommandOutput ||
-                  conversation.type === "assistant" ||
-                  conversation.type === "system" ||
-                  conversation.type === "summary"
-                    ? "justify-start"
-                    : "justify-end"
-                } animate-in fade-in slide-in-from-bottom-2 duration-300`}
-                key={getConversationKey(conversation)}
-              >
-                <div className="w-full max-w-3xl lg:max-w-4xl sm:w-[90%] md:w-[85%]">
-                  {elm}
-                </div>
-              </li>,
-            ];
-          },
-        )}
+          const isSidechain =
+            conversation.type !== "summary" &&
+            conversation.type !== "file-history-snapshot" &&
+            conversation.type !== "queue-operation" &&
+            conversation.type !== "progress" &&
+            conversation.type !== "custom-title" &&
+            conversation.type !== "agent-name" &&
+            conversation.isSidechain;
+
+          return [
+            <li
+              className={`w-full flex ${
+                isSidechain ||
+                isLocalCommandOutput ||
+                conversation.type === "assistant" ||
+                conversation.type === "system" ||
+                conversation.type === "summary"
+                  ? "justify-start"
+                  : "justify-end"
+              }`}
+              key={getConversationKey(conversation)}
+            >
+              <div className="w-full max-w-3xl lg:max-w-4xl sm:w-[90%] md:w-[85%]">
+                {elm}
+              </div>
+            </li>,
+          ];
+        })}
       </ul>
       <ScheduledMessageNotice scheduledJobs={scheduledJobs} />
     </>

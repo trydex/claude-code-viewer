@@ -1,5 +1,5 @@
 import { useLingui } from "@lingui/react";
-import type { FC } from "react";
+import { type FC, memo } from "react";
 import type {
   Conversation,
   SidechainConversation,
@@ -18,7 +18,7 @@ import { SystemConversationContent } from "./SystemConversationContent";
 import { TurnDuration } from "./TurnDuration";
 import { UserConversationContent } from "./UserConversationContent";
 
-export const ConversationItem: FC<{
+interface ConversationItemProps {
   conversation: Conversation;
   getToolResult: (toolUseId: string) => ToolResultContent | undefined;
   getAgentIdForToolUse: (toolUseId: string) => string | undefined;
@@ -35,7 +35,9 @@ export const ConversationItem: FC<{
   projectId: string;
   sessionId: string;
   showTimestamp?: boolean;
-}> = ({
+}
+
+export const ConversationItem: FC<ConversationItemProps> = memo(({
   conversation,
   getToolResult,
   getAgentIdForToolUse,
@@ -302,4 +304,4 @@ export const ConversationItem: FC<{
   }
 
   return null;
-};
+});

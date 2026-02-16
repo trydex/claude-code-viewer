@@ -1,7 +1,7 @@
 import { Trans } from "@lingui/react";
 import { ChevronDown, Lightbulb, Wrench } from "lucide-react";
 import type { FC } from "react";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { LazySyntaxHighlighter as SyntaxHighlighter } from "../../../../../../components/LazySyntaxHighlighter";
 import {
   oneDark,
   oneLight,

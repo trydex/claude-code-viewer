@@ -41,7 +41,7 @@
     "lingui:extract": "lingui extract --clean && node ./scripts/lingui-sort.js",
     "lingui:compile": "lingui compile --typescript",
     "prepack": "pnpm build",
-    "prepare": "lefthook install"
+    "prepare": "test -d .git && lefthook install || true"
   },
   "dependencies": {
     "@anthropic-ai/claude-agent-sdk": "0.2.20",

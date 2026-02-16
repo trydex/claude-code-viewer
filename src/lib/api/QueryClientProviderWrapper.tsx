@@ -4,8 +4,9 @@ import type { FC, PropsWithChildren } from "react";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      refetchOnWindowFocus: true,
+      refetchOnWindowFocus: false,
       retry: false,
+      staleTime: 5 * 60 * 1000,
     },
   },
 });

@@ -15,7 +15,7 @@ RUN --mount=type=cache,id=pnpm-store,target=/root/.pnpm-store \
 COPY . .
 RUN find . -name "*.sh" -exec sed -i 's/\r$//' {} + && chmod +x scripts/docker-entrypoint.sh
 RUN --mount=type=cache,id=pnpm-store,target=/root/.pnpm-store \
-    pnpm build && pnpm prune --prod --ignore-scripts
+    pnpm build && pnpm prune --prod
 
 FROM base AS runner
 WORKDIR /app
