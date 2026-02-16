@@ -55,6 +55,7 @@ import { getSessionStatusBadgeProps } from "./sessionStatusBadge";
 type SessionPageMainProps = {
   projectId: string;
   sessionId?: string;
+  pendingProcessId?: string;
   projectPath?: string;
   projectName: string;
 };
@@ -62,11 +63,115 @@ type SessionPageMainProps = {
 type SessionData = ReturnType<typeof useSession>;
 
 export const SessionPageMain: FC<SessionPageMainProps> = (props) => {
+  if (props.pendingProcessId && !props.sessionId) {
+    return (
+      <PendingSessionView
+        projectId={props.projectId}
+        pendingProcessId={props.pendingProcessId}
+      />
+    );
+  }
+
   if (!props.sessionId) {
     return <SessionPageMainContent {...props} sessionData={null} />;
   }
 
   return <SessionPageMainWithData {...props} sessionId={props.sessionId} />;
+};
+
+const PendingSessionView: FC<{
+  projectId: string;
+  pendingProcessId: string;
+}> = ({ projectId, pendingProcessId }) => {
+  const navigate = useNavigate();
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const poll = async () => {
+      while (!cancelled) {
+        try {
+          const response = await fetch(
+            `/api/claude-code/session-processes/${pendingProcessId}`,
+          );
+          if (!response.ok) {
+            if (response.status === 500) {
+              setError("Failed to connect to Claude");
+            }
+            break;
+          }
+          const data = await response.json();
+          if (data.process.sessionId) {
+            navigate({
+              to: "/projects/$projectId/session",
+              params: { projectId },
+              search: (prev) => ({
+                ...prev,
+                sessionId: data.process.sessionId,
+                pendingProcessId: undefined,
+              }),
+            });
+            return;
+          }
+          if (data.process.status === "completed") {
+            setError("Session failed to initialize");
+            return;
+          }
+        } catch {
+          setError("Connection lost");
+          return;
+        }
+        await new Promise((r) => setTimeout(r, 500));
+      }
+    };
+
+    poll();
+    return () => {
+      cancelled = true;
+    };
+  }, [pendingProcessId, projectId, navigate]);
+
+  return (
+    <div className="flex-1 flex flex-col items-center justify-center min-h-0">
+      {error ? (
+        <div className="text-center space-y-3">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
+            <MessageSquareIcon className="w-5 h-5 text-destructive" />
+          </div>
+          <p className="text-sm text-destructive font-medium">{error}</p>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              navigate({
+                to: "/projects/$projectId/session",
+                params: { projectId },
+                search: (prev) => ({
+                  ...prev,
+                  pendingProcessId: undefined,
+                }),
+              })
+            }
+          >
+            Back
+          </Button>
+        </div>
+      ) : (
+        <div className="text-center space-y-4">
+          <div className="relative">
+            <LoaderIcon className="w-10 h-10 animate-spin text-primary mx-auto" />
+          </div>
+          <div className="space-y-1">
+            <p className="text-base font-semibold">Connecting to Claude...</p>
+            <p className="text-sm text-muted-foreground">
+              Starting session, please wait
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 };
 
 const SessionPageMainWithData: FC<

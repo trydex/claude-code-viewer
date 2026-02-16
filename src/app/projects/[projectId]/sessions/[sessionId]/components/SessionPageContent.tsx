@@ -18,8 +18,9 @@ import type { Tab } from "./sessionSidebar/schema";
 export const SessionPageContent: FC<{
   projectId: string;
   sessionId?: string;
+  pendingProcessId?: string;
   tab: Tab;
-}> = ({ projectId, sessionId, tab }) => {
+}> = ({ projectId, sessionId, pendingProcessId, tab }) => {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   useSyncRightPanelWithSearchParams();
   const isMobile = useIsMobile();
@@ -68,6 +69,7 @@ export const SessionPageContent: FC<{
               <SessionPageMain
                 projectId={projectId}
                 sessionId={sessionId}
+                pendingProcessId={pendingProcessId}
                 projectPath={projectPath}
                 projectName={projectName}
               />

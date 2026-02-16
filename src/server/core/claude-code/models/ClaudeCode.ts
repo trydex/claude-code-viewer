@@ -93,17 +93,28 @@ const resolveClaudeCodePath = Effect.gen(function* () {
   return resolvedClaudePath;
 });
 
+let cachedConfig: {
+  claudeCodeExecutablePath: string;
+  claudeCodeVersion: ClaudeCodeVersion.ClaudeCodeVersion | null;
+} | null = null;
+
 export const Config = Effect.gen(function* () {
+  if (cachedConfig) {
+    return cachedConfig;
+  }
+
   const claudeCodeExecutablePath = yield* resolveClaudeCodePath;
 
   const claudeCodeVersion = ClaudeCodeVersion.fromCLIString(
     yield* Command.string(Command.make(claudeCodeExecutablePath, "--version")),
   );
 
-  return {
+  cachedConfig = {
     claudeCodeExecutablePath,
     claudeCodeVersion,
   };
+
+  return cachedConfig;
 });
 
 export const getMcpListOutput = (projectCwd: string) =>

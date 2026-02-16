@@ -7,11 +7,13 @@ import { ProjectRepository } from "../../project/infrastructure/ProjectRepositor
 import type { UserMessageInput } from "../functions/createMessageGenerator";
 import type * as CCTurn from "../models/ClaudeCodeTurn";
 import { ClaudeCodeLifeCycleService } from "../services/ClaudeCodeLifeCycleService";
+import { ClaudeCodeSessionProcessService } from "../services/ClaudeCodeSessionProcessService";
 
 const LayerImpl = Effect.gen(function* () {
   const projectRepository = yield* ProjectRepository;
   const claudeCodeLifeCycleService = yield* ClaudeCodeLifeCycleService;
   const userConfigService = yield* UserConfigService;
+  const sessionProcessService = yield* ClaudeCodeSessionProcessService;
 
   const getSessionProcesses = () =>
     Effect.gen(function* () {
@@ -70,15 +72,13 @@ const LayerImpl = Effect.gen(function* () {
         ccOptions,
       });
 
-      const { sessionId } = yield* result.yieldSessionInitialized();
-
       return {
         status: 201 as const,
         response: {
           sessionProcess: {
             id: result.sessionProcess.def.sessionProcessId,
             projectId,
-            sessionId,
+            sessionId: null as string | null,
           },
         },
       } as const satisfies ControllerResponse;
@@ -120,10 +120,29 @@ const LayerImpl = Effect.gen(function* () {
       } as const satisfies ControllerResponse;
     });
 
+  const getSessionProcessById = (sessionProcessId: string) =>
+    Effect.gen(function* () {
+      const process =
+        yield* sessionProcessService.getSessionProcess(sessionProcessId);
+
+      return {
+        status: 200 as const,
+        response: {
+          process: {
+            id: process.def.sessionProcessId,
+            projectId: process.def.projectId,
+            sessionId: (process.sessionId ?? null) as string | null,
+            status: process.type,
+          },
+        },
+      } as const satisfies ControllerResponse;
+    });
+
   return {
     getSessionProcesses,
     createSessionProcess,
     continueSessionProcess,
+    getSessionProcessById,
   };
 });
 

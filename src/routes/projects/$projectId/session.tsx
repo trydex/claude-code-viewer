@@ -11,6 +11,7 @@ const rightPanelTabSchema = z.enum(["git", "files-tools", "review", "browser"]);
 
 const sessionSearchSchema = z.object({
   sessionId: z.string().optional(),
+  pendingProcessId: z.string().optional(),
   tab: tabSchema.optional().default("sessions"),
   rightPanel: z.boolean().optional().default(false),
   rightPanelTab: rightPanelTabSchema.optional().default("git"),
@@ -33,7 +34,7 @@ function RouteComponent() {
   const { data } = useProject(params.projectId);
   const projectName = data.pages[0]?.project.meta.projectName;
 
-  const { sessionId, tab } = search;
+  const { sessionId, pendingProcessId, tab } = search;
 
   const title = projectName
     ? `${projectName} - Claude Code Viewer`
@@ -45,6 +46,7 @@ function RouteComponent() {
       <SessionPageContent
         projectId={params.projectId}
         sessionId={sessionId}
+        pendingProcessId={pendingProcessId}
         tab={tab}
       />
     </ProtectedRoute>

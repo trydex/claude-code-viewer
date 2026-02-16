@@ -3,7 +3,7 @@ import { type FC, type PropsWithChildren, useCallback, useRef } from "react";
 import { projectDetailQuery, sessionDetailQuery } from "../../lib/api/queries";
 import { useServerEventListener } from "../../lib/sse/hook/useServerEventListener";
 
-const DEBOUNCE_MS = 500;
+const DEBOUNCE_MS = 150;
 
 export const SSEEventListeners: FC<PropsWithChildren> = ({ children }) => {
   const queryClient = useQueryClient();

@@ -51,6 +51,7 @@ export const useCreateSessionProcessMutation = (
     },
     onSuccess: async (response) => {
       onSuccess?.();
+      const { sessionId, id } = response.sessionProcess;
       navigate({
         to: "/projects/$projectId/session",
         params: {
@@ -58,7 +59,8 @@ export const useCreateSessionProcessMutation = (
         },
         search: (prev) => ({
           ...prev,
-          sessionId: response.sessionProcess.sessionId,
+          sessionId: sessionId ?? undefined,
+          pendingProcessId: sessionId ? undefined : id,
         }),
       });
     },

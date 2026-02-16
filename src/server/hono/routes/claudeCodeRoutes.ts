@@ -108,6 +108,16 @@ const claudeCodeRoutes = Effect.gen(function* () {
         return response;
       },
     )
+    .get("/session-processes/:sessionProcessId", async (c) => {
+      const { sessionProcessId } = c.req.param();
+      const response = await effectToResponse(
+        c,
+        claudeCodeSessionProcessController.getSessionProcessById(
+          sessionProcessId,
+        ),
+      );
+      return response;
+    })
     .post(
       "/session-processes/:sessionProcessId/continue",
       zValidator(
