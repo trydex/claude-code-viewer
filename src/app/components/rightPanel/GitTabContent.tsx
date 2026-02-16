@@ -10,7 +10,7 @@ import {
   Loader2,
   RefreshCwIcon,
 } from "lucide-react";
-import { type FC, Suspense, useCallback, useMemo, useState } from "react";
+import { Component, type ErrorInfo, type FC, type ReactNode, Suspense, useCallback, useMemo, useState } from "react";
 import { LazySyntaxHighlighter as SyntaxHighlighter } from "../LazySyntaxHighlighter";
 import {
   oneDark,
@@ -496,6 +496,64 @@ const SessionTodoSection: FC<{ projectId: string; sessionId: string }> = ({
 };
 
 // ---------------------------------------------------------------------------
+// GitErrorBoundary
+// ---------------------------------------------------------------------------
+
+interface GitErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+}
+
+class GitErrorBoundary extends Component<
+  { children: ReactNode; onRetry?: () => void },
+  GitErrorBoundaryState
+> {
+  state: GitErrorBoundaryState = { hasError: false, error: null };
+
+  static getDerivedStateFromError(error: Error): GitErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error("Git panel error:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex-1 flex items-center justify-center p-8">
+          <div className="text-center space-y-3">
+            <div className="w-12 h-12 mx-auto rounded-xl bg-destructive/10 flex items-center justify-center">
+              <AlertCircle className="w-6 h-6 text-destructive/50" />
+            </div>
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-muted-foreground">
+                Git repository unavailable
+              </p>
+              <p className="text-xs text-muted-foreground/70">
+                {this.state.error?.message ?? "Failed to connect to repository"}
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                this.setState({ hasError: false, error: null });
+                this.props.onRetry?.();
+              }}
+            >
+              <RefreshCwIcon className="w-3.5 h-3.5 mr-1" />
+              Retry
+            </Button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+// ---------------------------------------------------------------------------
 // GitTabContent (exported, manages Suspense boundaries + reload)
 // ---------------------------------------------------------------------------
 
@@ -528,41 +586,43 @@ export const GitTabContent: FC<GitTabContentProps> = ({
   }, [queryClient, projectId]);
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Header: Branch selector + Reload button */}
-      <div className="border-b border-border/40 px-3 py-2 bg-muted/10 flex items-center gap-1">
-        <Suspense fallback={<BranchSelectorFallback />}>
-          <BranchSelectorContent projectId={projectId} />
-        </Suspense>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-7 w-7 p-0 flex-shrink-0"
-          onClick={handleReload}
-          disabled={isGitFetching}
-        >
-          <RefreshCwIcon
-            className={cn(
-              "w-3.5 h-3.5 text-muted-foreground",
-              isGitFetching && "animate-spin",
-            )}
-          />
-        </Button>
-      </div>
+    <GitErrorBoundary onRetry={handleReload}>
+      <div className="flex flex-col h-full">
+        {/* Header: Branch selector + Reload button */}
+        <div className="border-b border-border/40 px-3 py-2 bg-muted/10 flex items-center gap-1">
+          <Suspense fallback={<BranchSelectorFallback />}>
+            <BranchSelectorContent projectId={projectId} />
+          </Suspense>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 w-7 p-0 flex-shrink-0"
+            onClick={handleReload}
+            disabled={isGitFetching}
+          >
+            <RefreshCwIcon
+              className={cn(
+                "w-3.5 h-3.5 text-muted-foreground",
+                isGitFetching && "animate-spin",
+              )}
+            />
+          </Button>
+        </div>
 
-      {/* File list */}
-      <div className="flex-1 min-h-0 overflow-y-auto">
-        <Suspense fallback={<GitFileListFallback />}>
-          <GitFileList projectId={projectId} />
-        </Suspense>
-      </div>
+        {/* File list */}
+        <div className="flex-1 min-h-0 overflow-y-auto">
+          <Suspense fallback={<GitFileListFallback />}>
+            <GitFileList projectId={projectId} />
+          </Suspense>
+        </div>
 
-      {/* Todo section */}
-      {sessionId && (
-        <Suspense fallback={null}>
-          <SessionTodoSection projectId={projectId} sessionId={sessionId} />
-        </Suspense>
-      )}
-    </div>
+        {/* Todo section */}
+        {sessionId && (
+          <Suspense fallback={null}>
+            <SessionTodoSection projectId={projectId} sessionId={sessionId} />
+          </Suspense>
+        )}
+      </div>
+    </GitErrorBoundary>
   );
 };
