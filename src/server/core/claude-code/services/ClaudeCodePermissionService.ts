@@ -21,7 +21,7 @@ const LayerImpl = Effect.gen(function* () {
 
   const waitPermissionResponse = (
     request: PermissionRequest,
-    options: { timeoutMs: number },
+    options: { timeoutMs: number; projectId?: string; cwd?: string },
   ) =>
     Effect.gen(function* () {
       yield* Ref.update(pendingPermissionRequestsRef, (requests) => {
@@ -31,6 +31,8 @@ const LayerImpl = Effect.gen(function* () {
 
       yield* eventBus.emit("permissionRequested", {
         permissionRequest: request,
+        projectId: options.projectId,
+        cwd: options.cwd,
       });
 
       let passedMs = 0;
@@ -53,8 +55,10 @@ const LayerImpl = Effect.gen(function* () {
     turnId: string;
     userConfig: UserConfig;
     sessionId?: string;
+    projectId?: string;
+    cwd?: string;
   }) => {
-    const { turnId, userConfig, sessionId } = options;
+    const { turnId, userConfig, sessionId, projectId, cwd } = options;
 
     return Effect.gen(function* () {
       const claudeCodeConfig = yield* ClaudeCode.Config;
@@ -98,7 +102,11 @@ const LayerImpl = Effect.gen(function* () {
         };
 
         const response = await Effect.runPromise(
-          waitPermissionResponse(permissionRequest, { timeoutMs: 60000 }),
+          waitPermissionResponse(permissionRequest, {
+            timeoutMs: 60000,
+            projectId,
+            cwd,
+          }),
         );
 
         if (response === null) {

@@ -2,6 +2,7 @@ import { Context, Effect, Layer, Ref, Schedule } from "effect";
 import { EventBus } from "../core/events/services/EventBus";
 import { FileWatcherService } from "../core/events/services/fileWatcher";
 import type { InternalEventDeclaration } from "../core/events/types/InternalEventDeclaration";
+import { TelegramNotificationService } from "../core/notifications/TelegramNotificationService";
 import { ProjectRepository } from "../core/project/infrastructure/ProjectRepository";
 import { ProjectMetaService } from "../core/project/services/ProjectMetaService";
 import { RateLimitAutoScheduleService } from "../core/rate-limit/services/RateLimitAutoScheduleService";
@@ -23,6 +24,7 @@ export class InitializeService extends Context.Tag("InitializeService")<
     Effect.gen(function* () {
       const eventBus = yield* EventBus;
       const fileWatcher = yield* FileWatcherService;
+      const telegramNotificationService = yield* TelegramNotificationService;
       const projectRepository = yield* ProjectRepository;
       const sessionRepository = yield* SessionRepository;
       const projectMetaService = yield* ProjectMetaService;
@@ -47,6 +49,8 @@ export class InitializeService extends Context.Tag("InitializeService")<
 
           // Rate limit auto-schedule service を開始
           yield* rateLimitAutoScheduleService.start();
+
+          yield* telegramNotificationService.start();
 
           // ハートビートを定期的に送信
           const daemon = Effect.repeat(
@@ -137,6 +141,7 @@ export class InitializeService extends Context.Tag("InitializeService")<
           }
 
           yield* Ref.set(listenersRef, {});
+          yield* telegramNotificationService.stop();
           yield* rateLimitAutoScheduleService.stop();
           yield* fileWatcher.stop();
         });

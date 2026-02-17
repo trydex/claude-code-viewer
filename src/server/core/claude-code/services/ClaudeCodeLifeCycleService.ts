@@ -311,6 +311,8 @@ const LayerImpl = Effect.gen(function* () {
                 turnId: task.def.turnId,
                 userConfig,
                 sessionId: task.def.baseSessionId,
+                projectId,
+                cwd: sessionProcess.def.cwd,
               });
 
             return yield* ClaudeCode.query(generateMessages(), {

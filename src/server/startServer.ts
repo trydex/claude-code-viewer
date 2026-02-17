@@ -17,6 +17,7 @@ import { ClaudeCodeSessionProcessService } from "./core/claude-code/services/Cla
 import { SSEController } from "./core/events/presentation/SSEController";
 import { FileWatcherService } from "./core/events/services/fileWatcher";
 import { FeatureFlagController } from "./core/feature-flag/presentation/FeatureFlagController";
+import { TelegramNotificationService } from "./core/notifications/TelegramNotificationService";
 import { FileSystemController } from "./core/file-system/presentation/FileSystemController";
 import { GitController } from "./core/git/presentation/GitController";
 import { GitService } from "./core/git/services/GitService";
@@ -146,6 +147,7 @@ const AppServices = Layer.mergeAll(
   RateLimitAutoScheduleService.Live,
   AuthMiddleware.Live,
   TerminalService.Live,
+  TelegramNotificationService.Live,
 );
 
 const ApplicationLayer = InitializeService.Live.pipe(

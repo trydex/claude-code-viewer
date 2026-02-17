@@ -36,6 +36,9 @@ yarn-error.log*
 # local scripts
 ssh-tunnel.ps1
 ssh-tunnel-silent.vbs
+infra-watchdog*
+claude-health-check*
+register-*.ps1
 
 # vercel
 .vercel
